@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+
+      body{
+        margin: 0px;
+        padding: 0px;
+        overflow: hidden; /* Hide scrollbars */
+        background-color: lightgreen;
+        width: 100%;
+        height: 1090px;
+    }
+    #canvas1 {
+        background-color: white ;
+        border: 5px solid black;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #cube {
+        width: 30px;
+        height: 30px;
+        position: absolute;
+        left: 300px;
+        top: 100px;
+        background-color: red;
+        transition: all 0.2s;
+    }
+    
+    #spielfeld {
+        background-color: black;
+        width: 1000px;
+        height: 700px;
+        position: absolute;
+        border: 1px;
+    
+    }
+    
+    :root {
+        --pixel-size: 6;
+     }
+     #Character {
+        width: calc(32px * var(--pixel-size));
+        height: calc(32px * var(--pixel-size));
+        overflow: hidden;
+        position: relative;
+        margin: 4em auto;
+     }
+     
+     .Character_spritesheet {
+        animation: moveSpritesheet 1s steps(4) infinite;
+        width: calc(128px * var(--pixel-size));
+        position: absolute;
+        
+     }
+    
+     .pixelart {
+        image-rendering: pixelated;
+     }
+     
+     .face-right {
+        top: calc(-32px * var(--pixel-size));
+     }
+     .face-up {
+        top: calc(-64px * var(--pixel-size));
+     }
+     .face-left {
+        top: calc(-96px * var(--pixel-size));
+     }
+     
+     
+     @keyframes moveSpritesheet {
+        from {
+           transform: translate3d(0px,0,0)
+        }
+        to {
+           transform: translate3d(-100%,0,0)
+        } 
+       }
+           </style>
+  </head>
+  <body>
+    <!-- HTML-Elemente hier -->
+  
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      var cube = null;
+
+      socket.on("connect", () => {
+        // Erstelle das Div-Element und füge es zum Dokument hinzu
+        const cubeDiv = document.createElement("div");
+        cubeDiv.id = "cube";
+        document.body.appendChild(cubeDiv);
+
+        // Erstelle das Canvas-Element und füge es zum Div hinzu
+        const canvas = document.createElement("canvas");
+        canvas.id = "canvas1";
+        cubeDiv.appendChild(canvas);
+
+        // Setze die Variable 'cube' auf das neu erstellte Element
+        cube = document.getElementById("cube");
+      });
+
+      // Funktion, um die Position des Cube-Elements zu aktualisieren
+      function updateCubePosition(position) {
+        cube.style.left = position.x + "px";
+        cube.style.top = position.y + "px";
+      }
+
+      // Funktion, um die aktuelle Position des Cube-Elements zu erhalten
+      function getCubePosition() {
+        return {
+          x: cube.offsetLeft,
+          y: cube.offsetTop
+        };
+      }
+
+      socket.on("connect", function() {
+        // Wenn der Client mit dem Server verbunden ist, fügen Sie einen Keydown-Event-Listener hinzu
+        document.addEventListener("keydown", function(event) {
+          var keyCode = event.keyCode;
+          var currentPosition = getCubePosition();
+
+          if (keyCode === 37) {
+            // Bewege nach links
+            currentPosition.x -= 10;
+          } else if (keyCode === 38) {
+            // Bewege nach oben
+            currentPosition.y -= 10;
+          } else if (keyCode === 39) {
+            // Bewege nach rechts
+            currentPosition.x += 10;
+          } else if (keyCode === 40) {
+            // Bewege nach unten
+            currentPosition.y += 10;
+          }
+
+          // Senden Sie den aktuellen Cube-Status an den Server
+          socket.emit("update-cube", currentPosition);
+        });
+      });
+
+      socket.on("init", function(cube){
+console.log(cube);
+      });
+
+      // Empfangen Sie eine Nachricht vom Server mit dem aktualisierten Cube-Status
+      socket.on("update-cube", function(position) {
+        updateCubePosition(position);
+      });
+    </script>
+  </body>
+</html>
