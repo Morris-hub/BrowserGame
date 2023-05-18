@@ -20,25 +20,6 @@ io.emit("init", function(cubes){
  console.log("init" + cubes)
 });
 
-io.on("connection", function(socket) {
-  // Senden Sie den aktuellen Cube-Status an den Client
-  //socket.emit("init", clients);
-
-  // Empfangen Sie den aktuellen Cube-Status vom Client
-  socket.on("update-cube", function(position) {
-    //clients.get(socket.id).x = position.x;
-    //clients.get(socket.id).y = position.y;
-    //io.emit("update-cube", clients);
-  });
-});
-
-
-io.on("connection", function(socket) {
-  // Senden Sie den aktuellen Cube-Status an den Client
-  //socket.emit("init", Array.from(clients.values()));
-}); 
-
-
 
 io.on('connection', function(socket) {
   let clientID = socket.id;
@@ -49,7 +30,7 @@ io.on('connection', function(socket) {
       y: Math.floor(Math.random() * 11)
     };
 
-   console.log(cubes);
+   //console.log(cubes);
    socket.on("update-cube", function(position) {
     // Füge die Socket-ID zur Position hinzu
     position.socketID = socket.id;

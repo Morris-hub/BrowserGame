@@ -13,6 +13,7 @@
         width: 100%;
         height: 1090px;
     }
+
     #canvas {
         background-color: white ;
         border: 5px solid black;
@@ -21,6 +22,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
     }
+
     #cube {
         width: 30px;
         height: 30px;
@@ -31,8 +33,6 @@
         transition: all 0.2s;
     }
 
-    
-    
      #Character {
         width: calc(32px * var(--pixel-size));
         height: calc(32px * var(--pixel-size));
@@ -42,10 +42,9 @@
      }
      
      .Character_spritesheet {
-        animation: moveSpritesheet 1s steps(4) infinite;
-        width: calc(128px * var(--pixel-size));
-        position: absolute;
-        
+      animation: moveSpritesheet 1s steps(4) infinite;
+      width: calc(128px * var(--pixel-size));
+      position: absolute;
      }
 
      #socket-id {
@@ -56,28 +55,24 @@
       font-family: Arial, sans-serif;
       font-size: 14px;
     }
-    
-     
      
            </style>
   </head>
   <body>
-    <!-- HTML-Elemente hier -->
   
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
       var cube = null;
 
+      //create Player screen
       socket.on("connect", () => {
          createPlayer();
          displaySocketID();
       });
 
-    
 
-     
-     
+      //Movement Player
       socket.on("connect", function() {
         // Wenn der Client mit dem Server verbunden ist, fügen Sie einen Keydown-Event-Listener hinzu
         document.addEventListener("keydown", function(event) {
@@ -104,24 +99,17 @@
         });
       });
 
-      socket.on("init", function(cube){
-         createPlayer();
-      });
-/*
-      // Empfangen Sie eine Nachricht vom Server mit dem aktualisierten Cube-Status
-      socket.on("update-cube", function(position) {
-        updateCubePosition(position);
-      });
-*/
+      //socket.on("init", function(cube){
+        // createPlayer();
+      //});
 
 socket.on("update-cube", function(position) {
   // Überprüfe, ob die Socket-ID mit der aktuellen Socket-ID übereinstimmt
   if (position.socketID === socket.id) {
-    console.log(position.socketID);
+   // console.log("Socket position "+ position.socketID);
     updateCubePosition(position);
   }
 });
-
 
 //                                                    Funktionen 
        // Funktion, um die Position des Cube-Elements zu aktualisieren
@@ -151,7 +139,6 @@ socket.on("update-cube", function(position) {
    
            // Setze die Variable 'cube' auf das neu erstellte Element
            cube = document.getElementById("cube");
-      
       }
 
 
@@ -167,6 +154,17 @@ socket.on("update-cube", function(position) {
 
       }
 
+      function displayJoinedSocketID(){
+
+          // Aktualisiere das Socket-ID-Element mit der aktuellen Socket-ID
+          const socketDiv = document.createElement("div");
+          joinedSocketDiv.id = "joined-socket-id"
+          document.body.appendChild(socketDiv);
+
+          var socketIdElement = document.getElementById("joinedSocketDiv");
+          socketIdElement.textContent = "Socket ID: " + socket.id;
+
+      }
 
     </script>
   </body>
