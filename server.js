@@ -43,6 +43,17 @@ io.on('connection', function(socket) {
   });
 });
 
+// Im Server-Code
+io.on('connection', function(socket) {
+  // ...
+  // Behandeln Sie das "update-socket-id"-Ereignis und senden Sie die aktualisierte Socket-ID an alle verbundenen Clients
+  socket.on("update-socket-id", function(newSocketId) {
+    io.emit("socket-id-updated", { oldSocketId: socket.id, newSocketId: newSocketId });
+    socket.id = newSocketId; // Aktualisieren Sie die Socket-ID des aktuellen Sockets
+  });
+});
+
+
 server.listen(PORT, () => {
   console.log(`listening on http://localhost:${PORT}`);
 });

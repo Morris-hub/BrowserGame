@@ -54,15 +54,12 @@
     <script>
       var socket = io();
       var cube = null;
-
-
         
       //create Player screen
       socket.on("connect", () => {
         //const myClientID = socket.id;
-        createCubeElement(socket.id);
-        console.log("1")
-         displaySocketID();
+        displaySocketID();
+        //createCubeElement(socket.id);
          
       });
 
@@ -74,7 +71,6 @@
             console.log("liste "+ clientID);
           }
         });
-
 
       //Movement Player
       socket.on("connect", function() {
