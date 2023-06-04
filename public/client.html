@@ -2,50 +2,11 @@
 <html>
   <head>
     <title>Multiplayer</title>
-    <style>
-      body {
-        margin: 0px;
-        padding: 0px;
-        overflow: hidden; /* Hide scrollbars */
-        background-color: black;
-        width: 100%;
-        height: 1090px;
-      }
-      #canvas {
-        background-color: white;
-        border: 5px solid black;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-      #Character {
-        width: calc(32px * var(--pixel-size));
-        height: calc(32px * var(--pixel-size));
-        overflow: hidden;
-        position: relative;
-        margin: 4em auto;
-      }
-
-      .Character_spritesheet {
-        animation: moveSpritesheet 1s steps(4) infinite;
-        width: calc(128px * var(--pixel-size));
-        position: absolute;
-      }
-
-      #socket-id {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        color: white;
-        font-family: Arial, sans-serif;
-        font-size: 14px;
-      }
-    </style>
   </head>
   <body>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+      //import { Animation } from "./animation.js";
       var socket = io();
       var cube = null;
       var clientId = null;
@@ -54,6 +15,8 @@
       socket.on("clientId", function(receivedClientId) {
         clientId = receivedClientId;
         displayclientID(clientId);
+        body();
+        //textBox();
         console.log("Meine Client-ID:", clientId);
       });
 
@@ -153,6 +116,51 @@
         clientIdElement.style.top = "10px";
         clientIdElement.style.left = "10px";
         document.body.appendChild(clientIdElement);
+      }
+
+      function textBox() {
+        var textBox = document.createElement("div");
+        textBox.id = "box";
+        textBox.style.width = "200px";
+        textBox.style.height = "500px";
+        textBox.style.left = "50px";
+        textBox.style.top = "50px";
+        textBox.style.backgroundColor = "black";
+        textBox.style.border = "3px solid #EDC04E";
+        textBox.style.borderRadius = "3px";
+        textBox.style.position = "absolute";
+        document.body.appendChild(textBox);
+      }
+      function box() {
+        var newCube = document.createElement("div");
+        newCube.id = "box";
+        newCube.style.width = "30px";
+        newCube.style.height = "30px";
+        newCube.style.left = "300px";
+        newCube.style.top = "700px";
+        newCube.style.backgroundColor = "#ed3318";
+        newCube.style.border = "2px solid black";
+        newCube.style.boxShadow = "-5px 5px 0px black";
+        newCube.style.position = "absolute";
+        newCube.style.transition = "all 0.2s";
+        cube = document.body.appendChild(newCube);
+      }
+
+      function body() {
+        const body = document.body.style;
+        body.backgroundColor = "white";
+        body.margin = "0";
+        body.padding = "0";
+        body.overflow = "hidden";
+      }
+
+      function playground() {
+        const playground = document.createElement("div");
+        playground.id = "playground";
+        playground.style.width = "100%";
+        playground.style.height = height + "px";
+        playground.style.backgroundColor = "white";
+        document.body.appendChild(playground);
       }
     </script>
   </body>

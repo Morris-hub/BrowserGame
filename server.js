@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const http = require('http');
+const path = require('path');
 const socketIO = require('socket.io');
 const port = 3000;
 
@@ -9,8 +10,6 @@ const server = http.createServer(app);
 const io = socketIO(server);
 let cubes = {}
 
-// Statische Dateien vom "public" Ordner bereitstellen
-app.use(express.static('public'));
 
 // Express-Session initialisieren
 const sessionMiddleware = session({
@@ -19,6 +18,8 @@ const sessionMiddleware = session({
   saveUninitialized: true
 });
 
+// Statische Dateien vom "public" Ordner bereitstellen
+app.use(express.static('public'));
 app.use(sessionMiddleware);
 
 // Route für die Startseite
@@ -27,8 +28,10 @@ app.get('/', (req, res) => {
   const clientId = req.session.clientId || generateClientId();
 
   req.session.clientId = clientId;
+  console.log(__dirname);
 
-  res.sendFile(__dirname + '/client.html');
+  res.sendFile(__dirname + '/public/client.html');
+  console.log(__dirname);
 });
 
 // Middleware für Socket.IO, um die Express-Session zu verwenden
