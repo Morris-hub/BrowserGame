@@ -3,205 +3,157 @@
   <head>
     <title>Multiplayer</title>
     <style>
-
-      body{
+      body {
         margin: 0px;
         padding: 0px;
         overflow: hidden; /* Hide scrollbars */
         background-color: black;
         width: 100%;
         height: 1090px;
-    }
-
-    #canvas {
-        background-color: white ;
+      }
+      #canvas {
+        background-color: white;
         border: 5px solid black;
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-    }
-
-
-     #Character {
+      }
+      #Character {
         width: calc(32px * var(--pixel-size));
         height: calc(32px * var(--pixel-size));
         overflow: hidden;
         position: relative;
         margin: 4em auto;
-     }
-     
-     .Character_spritesheet {
-      animation: moveSpritesheet 1s steps(4) infinite;
-      width: calc(128px * var(--pixel-size));
-      position: absolute;
-     }
+      }
 
-     #socket-id {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    }
-     
-           </style>
+      .Character_spritesheet {
+        animation: moveSpritesheet 1s steps(4) infinite;
+        width: calc(128px * var(--pixel-size));
+        position: absolute;
+      }
+
+      #socket-id {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+      }
+    </style>
   </head>
   <body>
-  
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
       var cube = null;
-        
-      //create Player screen
-      socket.on("connect", () => {
-        //const myClientID = socket.id;
-        displaySocketID();
-        //createCubeElement(socket.id);
-         
+      var clientId = null;
+
+      // Client-ID empfangen
+      socket.on("clientId", function(receivedClientId) {
+        clientId = receivedClientId;
+        displayclientID(clientId);
+        console.log("Meine Client-ID:", clientId);
       });
 
-        // Empfange die init-Nachricht vom Server
-        socket.on("init", function(cubes) {
-          // Erstelle Cube-Elemente für jeden verbundenen Client
-          for (var clientID in cubes) {
-           createCubeElement(clientID);
-            console.log("liste "+ clientID);
-          }
-        });
+      // Empfange die init-Nachricht vom Server
+      socket.on("init", function(cubes) {
+        // Erstelle Cube-Elemente für jeden verbundenen Client
+        for (var clientID in cubes) {
+          createCubeElement(clientID);
+          console.log("liste " + clientID);
+        }
+      });
 
       //Movement Player
-      socket.on("connect", function() {
-        // Wenn der Client mit dem Server verbunden ist, fügen Sie einen Keydown-Event-Listener hinzu
-        document.addEventListener("keydown", function(event) {
-          var keyCode = event.keyCode;
-          var currentPosition = getCubePosition();
-          const speed = 25;
+      document.addEventListener("keydown", function(event) {
+        var keyCode = event.keyCode;
+        var currentPosition = getCubePosition();
+        const speed = 25;
 
-          if (keyCode === 37) {
-            // Bewege nach links
-            currentPosition.x -= speed;
-          } else if (keyCode === 38) {
-            // Bewege nach oben
-            currentPosition.y -= speed;
-          } else if (keyCode === 39) {
-            // Bewege nach rechts
-            currentPosition.x += speed;
-          } else if (keyCode === 40) {
-            // Bewege nach unten
-            currentPosition.y += speed;
-          }
+        if (keyCode === 37) {
+          // Bewege nach links
+          currentPosition.x -= speed;
+        } else if (keyCode === 38) {
+          // Bewege nach oben
+          currentPosition.y -= speed;
+        } else if (keyCode === 39) {
+          // Bewege nach rechts
+          currentPosition.x += speed;
+        } else if (keyCode === 40) {
+          // Bewege nach unten
+          currentPosition.y += speed;
+        }
 
-          // Senden Sie den aktuellen Cube-Status an den Server
-          socket.emit("update-cube", currentPosition);
-        });
+        // Senden Sie den aktuellen Cube-Status an den Server
+        socket.emit("update-cube", currentPosition);
       });
 
-   
-      
-socket.on("update-cube", function(position) {
-  // Überprüfe, ob die Socket-ID mit der aktuellen Socket-ID übereinstimmt
-  if (position.socketID === socket.id) {
-    console.log("Socket position "+ position.socketID);
-    updateCubePosition(position);
-  }
-});
+      socket.on("update-cube", function(position) {
+        // Überprüfe, ob die Socket-ID mit der aktuellen Socket-ID übereinstimmt
+        if (position.clientId === clientId) {
+          updateCubePosition(position);
+        }
+      });
 
+      // Aktualisiere die Position des Cube-Elements basierend auf den empfangenen Daten
+      socket.on("update-cube", function(position) {
+        var cubeElement = document.getElementById(position.clientId);
+        if (cubeElement) {
+          cubeElement.style.left = position.x + "px";
+          cubeElement.style.top = position.y + "px";
+        }
+      });
 
-
- // Aktualisiere die Position des Cube-Elements basierend auf den empfangenen Daten
- socket.on("update-cube", function(position) {
-  var cubeElement = document.getElementById(position.socketID);
-  if (cubeElement) {
-    cubeElement.style.left = position.x + "px";
-    cubeElement.style.top = position.y + "px";
-  }
-});
-
-
-//                                                    Funktionen 
+      //                                                    Funktionen
       // Funktion, um die Position des Cube-Elements zu aktualisieren
-       function updateCubePosition(position) {
+      function updateCubePosition(position) {
         cube.style.left = position.x + "px";
         cube.style.top = position.y + "px";
       }
 
-
-       // Funktion, um die aktuelle Position des Cube-Elements zu erhalten
-       function getCubePosition() {
+      // Funktion, um die aktuelle Position des Cube-Elements zu erhalten
+      function getCubePosition() {
         return {
-          socketID: socket.id,
+          clientId: clientId,
           x: cube.offsetLeft,
-          y: cube.offsetTop
+          y: cube.offsetTop,
         };
       }
 
-      function createPlayer() {
-        // Erstelle das Div-Element und füge es zum Dokument hinzu
-       const localClientID = socket.id;
-        const cubeDiv = document.createElement("div");
-        cubeDiv.class = localClientID;
-        cubeDiv.id = socket.id;
-        cubeDiv.style.width = "30px";
-        cubeDiv.style.height = "30px";
-        cubeDiv.style.backgroundColor = "red";
-        cubeDiv.style.position = "absolute";
-        cubeDiv.style.left = "300px"
-        cubeDiv.style.top = "700px"
-        cubeDiv.style.transition = "all 0.2s"
-        document.body.appendChild(cubeDiv);
-
-        // Erstelle das Canvas-Element und füge es zum Div hinzu
-        const canvas = document.createElement("canvas");
-        canvas.id = "canvas";
-        cubeDiv.appendChild(canvas);
-
-        // Setze die Variable 'cube' auf das neu erstellte Element
-        cube = document.getElementById(localClientID);
-   }
-
-
-      function displaySocketID(){
-
-          // Aktualisiere das Socket-ID-Element mit der aktuellen Socket-ID
-          const socketDiv = document.createElement("div");
-          socketDiv.id = "socket-id"
-          document.body.appendChild(socketDiv);
-
-          var socketIdElement = document.getElementById("socket-id");
-          socketIdElement.textContent = "Socket ID: " + socket.id;
-
+      function createCubeElement(clientId) {
+        var newCube = document.createElement("div");
+        newCube.id = clientId;
+        newCube.style.width = "30px";
+        newCube.style.height = "30px";
+        newCube.style.left = "300px";
+        newCube.style.top = "700px";
+        newCube.style.backgroundColor = "pink";
+        newCube.style.position = "absolute";
+        newCube.style.transition = "all 0.2s";
+        cube = document.body.appendChild(newCube);
       }
 
-      function displayJoinedSocketID(){
-
-          // Aktualisiere das Socket-ID-Element mit der aktuellen Socket-ID
-          const socketDiv = document.createElement("div");
-          joinedSocketDiv.id = "joined-socket-id"
-          document.body.appendChild(socketDiv);
-
-          var socketIdElement = document.getElementById("joinedSocketDiv");
-          socketIdElement.textContent = "Socket ID: " + socket.id;
-
+      function displaySocketID() {
+        var socketIdElement = document.createElement("div");
+        socketIdElement.id = "socket-id";
+        socketIdElement.textContent = "Socket ID: " + socket.id;
+        document.body.appendChild(socketIdElement);
       }
 
-        // Funktion, um ein neues Cube-Element für einen verbundenen Client zu erstellen
-        function createCubeElement(clientID) {
-          var newCube = document.createElement("div");
-          newCube.id = clientID;
-          newCube.style.width = "30px";
-          newCube.style.height = "30px";
-          newCube.style.left = "300px"
-          newCube.style.top = "700px"
-          newCube.style.backgroundColor = "pink";
-          newCube.style.position = "absolute";
-          newCube.style.transition = "all 0.2s"
-           cube = document.body.appendChild(newCube);
-        }
-
-        
+      function displayclientID(clientId) {
+        var clientIdElement = document.createElement("div");
+        clientIdElement.id = "client-id";
+        clientIdElement.textContent = "Client ID: " + clientId;
+        clientIdElement.style.fontFamily = "Arial, sans-serif";
+        clientIdElement.style.fontSize = "14px";
+        clientIdElement.style.color = "white";
+        clientIdElement.style.position = "absolute";
+        clientIdElement.style.top = "10px";
+        clientIdElement.style.left = "10px";
+        document.body.appendChild(clientIdElement);
+      }
     </script>
   </body>
 </html>

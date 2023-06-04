@@ -1,25 +1,55 @@
 const express = require('express');
-const app = express();
+const session = require('express-session');
 const http = require('http');
+const socketIO = require('socket.io');
+const port = 3000;
+
+const app = express();
 const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server);
-const PORT = 3000;
-let cubes = {};
+const io = socketIO(server);
+let cubes = {}
 
 // Statische Dateien vom "public" Ordner bereitstellen
 app.use(express.static('public'));
 
+// Express-Session initialisieren
+const sessionMiddleware = session({
+  secret: 'geheimnis', // Hier können Sie einen beliebigen geheimen Schlüssel einsetzen
+  resave: false,
+  saveUninitialized: true
+});
+
+app.use(sessionMiddleware);
+
+// Route für die Startseite
 app.get('/', (req, res) => {
+    // Generieren Sie eine Client-ID, wenn keine vorhanden ist
+  const clientId = req.session.clientId || generateClientId();
+
+  req.session.clientId = clientId;
+
   res.sendFile(__dirname + '/client.html');
 });
 
+// Middleware für Socket.IO, um die Express-Session zu verwenden
+io.use((socket, next) => {
+  sessionMiddleware(socket.request, socket.request.res, next);
+});
 
-// Senden Sie die Liste der Cubes an den Client
+// Eventhandler für neue Socket.IO-Verbindungen
+io.on('connection', (socket) => {
+  const clientId = socket.request.session.clientId;
+  socket.emit('clientId', clientId);
+});
+
+//Player input
+// Eventhandler für neue Socket.IO-Verbindungen
 io.on('connection', function(socket) {
-  console.log('user ' + socket.id + ' connected');
-  
-  cubes[socket.id] = {
+  const clientId = socket.request.session.clientId;
+  console.log('user ' + clientId + ' connected');
+
+  // Erstellen Sie einen neuen Cube für den verbundenen Client mit zufälligen Koordinaten
+  cubes[clientId] = {
     x: Math.floor(Math.random() * 9),
     y: Math.floor(Math.random() * 11)
   };
@@ -30,30 +60,30 @@ io.on('connection', function(socket) {
   // Aktualisiere den Cube-Status basierend auf den Eingaben des Clients
   socket.on("update-cube", function(position) {
     // Füge die Socket-ID zur Position hinzu
-    position.socketID = socket.id;
-    
+    position.clientId = clientId;
+
+    // Sende die aktualisierte Cube-Position an alle Clients
     io.emit("update-cube", position);
   });
 
   // Client-Verbindung trennen
   socket.on('disconnect', () => {
-    console.log('user ' + socket.id + ' disconnected');
-    delete cubes[socket.id];
-    io.emit("update-cube", { socketID: socket.id, remove: true });
+    console.log('user ' + clientId + ' disconnected');
+    // Entferne den Cube des getrennten Clients
+    delete cubes[clientId];
+    // Sende eine Nachricht an alle Clients, um den Cube zu entfernen
+    io.emit("update-cube", { clientId: clientId, remove: true });
   });
 });
 
-// Im Server-Code
-io.on('connection', function(socket) {
-  // ...
-  // Behandeln Sie das "update-socket-id"-Ereignis und senden Sie die aktualisierte Socket-ID an alle verbundenen Clients
-  socket.on("update-socket-id", function(newSocketId) {
-    io.emit("socket-id-updated", { oldSocketId: socket.id, newSocketId: newSocketId });
-    socket.id = newSocketId; // Aktualisieren Sie die Socket-ID des aktuellen Sockets
-  });
-});
+  
 
+// Funktion zum Generieren einer zufälligen Client-ID
+function generateClientId() {
+  return Math.random().toString(36).substring(7);
+}
 
-server.listen(PORT, () => {
-  console.log(`listening on http://localhost:${PORT}`);
+// Server starten
+server.listen(port, () => {
+  console.log(`Server gestartet auf Port http://localhost:${port}`);
 });
