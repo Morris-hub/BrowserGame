@@ -4,13 +4,14 @@ const http = require('http');
 const path = require('path');
 const socketIO = require('socket.io');
 const port = 3000;
+const Crypto = require('./server/crypto'); 
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 let cubes = {}
 
-
+app.use(express.static("public"));
 // Express-Session initialisieren
 const sessionMiddleware = session({
   secret: 'geheimnis', // Hier können Sie einen beliebigen geheimen Schlüssel einsetzen
@@ -19,17 +20,16 @@ const sessionMiddleware = session({
 });
 
 // Statische Dateien vom "public" Ordner bereitstellen
-app.use(express.static('public'));
+const publicPath = path.join(__dirname, "public");
 app.use(sessionMiddleware);
 
-// Route für die Startseite
+// Route für die Startseitea
 app.get('/', (req, res) => {
+const crypto = new Crypto();
+ 
     // Generieren Sie eine Client-ID, wenn keine vorhanden ist
-  const clientId = req.session.clientId || generateClientId();
-
+  const clientId = req.session.clientId ||  crypto.generateClientId();
   req.session.clientId = clientId;
-  console.log(__dirname);
-
   res.sendFile(__dirname + '/public/client.html');
   console.log(__dirname);
 });
@@ -81,10 +81,10 @@ io.on('connection', function(socket) {
 
   
 
-// Funktion zum Generieren einer zufälligen Client-ID
-function generateClientId() {
-  return Math.random().toString(36).substring(7);
-}
+// // Funktion zum Generieren einer zufälligen Client-ID
+// function generateClientId() {
+//   return Math.random().toString(36).substring(7);
+// }
 
 // Server starten
 server.listen(port, () => {

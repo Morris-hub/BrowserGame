@@ -2,20 +2,33 @@
 <html>
   <head>
     <title>Multiplayer</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=VT323&display=swap"
+    />
   </head>
   <body>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="./UI.js"></script>
     <script>
-      //import { Animation } from "./animation.js";
       var socket = io();
       var cube = null;
       var clientId = null;
+      var keyPressCount = 0;
+      const ui = new UI();
 
+      DivElement = null;
+
+      const text =
+        "Hello World \n" + "This is a Example for an Multiplayer Game \n";
       // Client-ID empfangen
       socket.on("clientId", function(receivedClientId) {
         clientId = receivedClientId;
         displayclientID(clientId);
+        // healthbar();
+        ui.healthbar();
         body();
+        button();
         //textBox();
         console.log("Meine Client-ID:", clientId);
       });
@@ -24,7 +37,7 @@
       socket.on("init", function(cubes) {
         // Erstelle Cube-Elemente für jeden verbundenen Client
         for (var clientID in cubes) {
-          createCubeElement(clientID);
+          createPlayer(clientID);
           console.log("liste " + clientID);
         }
       });
@@ -47,6 +60,8 @@
         } else if (keyCode === 40) {
           // Bewege nach unten
           currentPosition.y += speed;
+        } else if (keyCode === 49) {
+          ui.handler(ui.retroBox);
         }
 
         // Senden Sie den aktuellen Cube-Status an den Server
@@ -85,59 +100,13 @@
         };
       }
 
-      function createCubeElement(clientId) {
+      function createPlayer(clientId) {
         var newCube = document.createElement("div");
         newCube.id = clientId;
         newCube.style.width = "30px";
         newCube.style.height = "30px";
-        newCube.style.left = "300px";
-        newCube.style.top = "700px";
-        newCube.style.backgroundColor = "pink";
-        newCube.style.position = "absolute";
-        newCube.style.transition = "all 0.2s";
-        cube = document.body.appendChild(newCube);
-      }
-
-      function displaySocketID() {
-        var socketIdElement = document.createElement("div");
-        socketIdElement.id = "socket-id";
-        socketIdElement.textContent = "Socket ID: " + socket.id;
-        document.body.appendChild(socketIdElement);
-      }
-
-      function displayclientID(clientId) {
-        var clientIdElement = document.createElement("div");
-        clientIdElement.id = "client-id";
-        clientIdElement.textContent = "Client ID: " + clientId;
-        clientIdElement.style.fontFamily = "Arial, sans-serif";
-        clientIdElement.style.fontSize = "14px";
-        clientIdElement.style.color = "white";
-        clientIdElement.style.position = "absolute";
-        clientIdElement.style.top = "10px";
-        clientIdElement.style.left = "10px";
-        document.body.appendChild(clientIdElement);
-      }
-
-      function textBox() {
-        var textBox = document.createElement("div");
-        textBox.id = "box";
-        textBox.style.width = "200px";
-        textBox.style.height = "500px";
-        textBox.style.left = "50px";
-        textBox.style.top = "50px";
-        textBox.style.backgroundColor = "black";
-        textBox.style.border = "3px solid #EDC04E";
-        textBox.style.borderRadius = "3px";
-        textBox.style.position = "absolute";
-        document.body.appendChild(textBox);
-      }
-      function box() {
-        var newCube = document.createElement("div");
-        newCube.id = "box";
-        newCube.style.width = "30px";
-        newCube.style.height = "30px";
-        newCube.style.left = "300px";
-        newCube.style.top = "700px";
+        newCube.style.left = "50%";
+        newCube.style.top = "50%";
         newCube.style.backgroundColor = "#ed3318";
         newCube.style.border = "2px solid black";
         newCube.style.boxShadow = "-5px 5px 0px black";
@@ -146,21 +115,186 @@
         cube = document.body.appendChild(newCube);
       }
 
+      function healthbar(healtstatus = "100") {
+        var healthbar = document.createElement("div");
+        healthbar.id = "healthbar";
+        healthbar.style.width = "200px";
+        healthbar.style.height = "30px";
+        healthbar.style.left = "20px";
+        healthbar.style.top = "50px";
+        healthbar.style.zIndex = "1";
+        healthbar.style.backgroundColor = "red";
+        healthbar.style.borderRadius = "3px";
+        healthbar.style.boxShadow = "-5px 5px 0px black";
+        healthbar.style.border = "2px solid black";
+        healthbar.style.position = "absolute";
+        healthbar.style.transition = "all 0.2s";
+        healthbar.style.fontFamily = "'VT323', monospace";
+        healthbar.style.color = "#000000";
+
+        var innerbar = document.createElement("div");
+        innerbar.id = "innerbar";
+        innerbar.style.width = healtstatus + "%";
+        innerbar.style.height = "100%";
+        innerbar.style.backgroundColor = "green";
+        healthbar.appendChild(innerbar);
+        document.body.appendChild(healthbar);
+        return healthbar;
+      }
+      function displayclientID(clientId) {
+        var clientIdElement = document.createElement("div");
+        clientIdElement.id = "client-id";
+        clientIdElement.textContent = "Client ID: " + clientId;
+        clientIdElement.style.fontFamily = "Arial, sans-serif";
+        clientIdElement.style.fontSize = "20px";
+        clientIdElement.style.color = "black";
+        clientIdElement.style.zIndex = "1";
+        clientIdElement.style.fontFamily = "'VT323', monospace";
+        clientIdElement.style.position = "absolute";
+        clientIdElement.style.top = "10px";
+        clientIdElement.style.left = "20px";
+        document.body.appendChild(clientIdElement);
+      }
+
+      function textBox(text) {
+        var textBox = document.createElement("div");
+        textBox.id = "box";
+        textBox.style.width = "200px";
+        textBox.style.height = "350px";
+        textBox.style.right = "10px";
+        textBox.style.bottom = "10px";
+        textBox.style.backgroundColor = "black";
+        textBox.style.border = "4px solid #EDC04E";
+        textBox.style.borderRadius = "3px";
+        textBox.style.padding = "10px";
+        textBox.style.position = "absolute";
+        textBox.style.fontFamily = "'VT323', monospace";
+        textBox.style.color = "white";
+        document.body.appendChild(textBox);
+
+        // Textinhalt erstellen und zur Textbox hinzufügen
+        var textContent = document.createTextNode(text);
+        textBox.appendChild(textContent);
+        return textBox;
+      }
+
+      function retroBox(text) {
+        const box = document.createElement("div");
+        box.id = "box";
+        box.style.width = "300px";
+        box.style.height = "450px";
+        box.style.right = "50px";
+        box.style.bottom = "50px";
+        box.style.padding = "10px";
+        box.style.backgroundColor = "#ed3318";
+        box.style.border = "2px solid black";
+        box.style.boxShadow = "-5px 5px 0px black";
+        box.style.position = "absolute";
+        box.style.transition = "all 0.2s";
+        box.style.fontFamily = "'VT323', monospace";
+        box.style.fontSize = "20px";
+        box.style.color = "#000000";
+        document.body.appendChild(box);
+
+        // Textinhalt erstellen und zur Textbox hinzufügen
+        var textContent = document.createTextNode(text);
+        box.appendChild(textContent);
+        return box;
+      }
+      function inventar(text) {
+        const inbox = document.createElement("div");
+        box.id = "box";
+        box.style.width = "250px";
+        box.style.height = "500px";
+        box.style.right = "50px";
+        box.style.bottom = "50px";
+        box.style.padding = "10px";
+        box.style.backgroundColor = "#ed3318";
+        box.style.border = "2px solid black";
+        box.style.boxShadow = "-5px 5px 0px black";
+        box.style.position = "absolute";
+        box.style.transition = "all 0.2s";
+        box.style.fontFamily = "'VT323', monospace";
+        box.style.color = "#000000";
+        document.body.appendChild(box);
+
+        // Textinhalt erstellen und zur Textbox hinzufügen
+        var inventar = document.createElement("div");
+        inventar.id = "inventar";
+        inventar.style.width = "50px";
+        inventar.style.height = "50px";
+        inventar.style.border = "2px solid black";
+        inventar.style.backgroundColor = "#ed3318";
+        box.appendChild(inventar);
+        return box;
+      }
+
+      function hideTextBox() {
+        var textBox = document.getElementById("box");
+        textBox.style.display = "none";
+      }
+
       function body() {
         const body = document.body.style;
         body.backgroundColor = "white";
         body.margin = "0";
         body.padding = "0";
         body.overflow = "hidden";
+        body.width = "100%";
+        body.height = "1090px";
       }
 
-      function playground() {
+      function button() {
+        const button = document.createElement("button");
+        button.id = "button";
+        button.style.width = "50px";
+        button.style.height = "50px";
+        button.style.right = "50px";
+        button.style.bottom = "50px";
+        button.style.borderRadius = "100%";
+        button.style.padding = "10px";
+        button.style.backgroundColor = "#ed3318";
+        button.style.border = "2px solid black";
+        button.style.boxShadow = "-5px 5px 0px black";
+        button.style.position = "absolute";
+        button.style.fontFamily = "'VT323', monospace";
+        button.style.color = "#000000";
+        document.body.appendChild(button);
+
+        // Hinzufügen eines Klick-Eventhandlers zum Button
+        button.addEventListener("click", () => {
+          alert("Button wurde geklickt!");
+        });
+      }
+
+      function playground(height = 1000, player) {
         const playground = document.createElement("div");
         playground.id = "playground";
         playground.style.width = "100%";
         playground.style.height = height + "px";
-        playground.style.backgroundColor = "white";
+        playground.style.backgroundColor = "pink";
+        playground.appendChild(player);
         document.body.appendChild(playground);
+        //playground = document.body.appendChild(clientIdElement);
+        return playground;
+      }
+
+      function divHandler(keyCode, divElement) {
+        retroBoxElement = divElement;
+        keyPressCount++;
+
+        if (keyPressCount === 1) {
+          if (!retroBoxElement) {
+            retroBoxElement = divElement;
+          } else {
+            retroBoxElement.style.display = "block";
+          }
+        } else if (keyPressCount === 2) {
+          if (retroBoxElement) {
+            retroBoxElement.style.display = "none";
+          }
+          keyPressCount = 0;
+        }
       }
     </script>
   </body>
