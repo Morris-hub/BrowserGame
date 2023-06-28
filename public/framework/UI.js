@@ -1,4 +1,4 @@
-class UI {
+ class UI {
 
 text ="Hello World \n" + "This is a Example for an Multiplayer Game \n";
 keyPressCount = null;

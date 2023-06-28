@@ -6,17 +6,21 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=VT323&display=swap"
     />
+    <script src="./framework/Player.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="./framework/UI.js"></script>
+    <script src="./framework/Enemy.js"></script>
   </head>
   <body>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="./UI.js"></script>
+    <!-- <script src="./Player.js"></script> -->
     <script>
       var socket = io();
       var cube = null;
       var clientId = null;
       var keyPressCount = 0;
       const ui = new UI();
-
+      const enemy = new Enemy();
+      const player = new Player();
       DivElement = null;
 
       const text =
@@ -26,6 +30,24 @@
         clientId = receivedClientId;
         displayclientID(clientId);
         ui.healthbar();
+        enemy.createEnemy();
+        enemy.moveRandom();
+        const div = document.getElementById("enemy");
+
+        var interval = setInterval(function() {
+          // Hier kommt der Code für deine Funktion
+          var pos_x = getRandomIntInclusive(1, 820);
+          var pos_y = getRandomIntInclusive(1, 1080);
+          enemy.moveDivToCoordinates(div, pos_x , pos_y);
+          console.log("Die Funktion wird alle 3 Sekunden aufgerufen.");
+        }, 3000);
+
+        // Stoppt das Intervall nach 10 Sekunden
+        setTimeout(function() {
+          clearInterval(interval);
+          console.log("Das Intervall wurde gestoppt.");
+        }, 10000);
+
         body();
         button();
         //textBox();
@@ -41,8 +63,10 @@
         }
       });
 
+     player.move();
+
       //Movement Player
-      document.addEventListener("keydown", function(event) {
+   /*   document.addEventListener("keydown", function(event) {
         var keyCode = event.keyCode;
         var currentPosition = getCubePosition();
         const speed = 25;
@@ -50,12 +74,15 @@
         if (keyCode === 37) {
           // Bewege nach links
           currentPosition.x -= speed;
+          player.checkCollision();
         } else if (keyCode === 38) {
           // Bewege nach oben
           currentPosition.y -= speed;
+          //checkCollision(enemy);
         } else if (keyCode === 39) {
           // Bewege nach rechts
           currentPosition.x += speed;
+          //checkCollision(enemy);
         } else if (keyCode === 40) {
           // Bewege nach unten
           currentPosition.y += speed;
@@ -66,7 +93,7 @@
         // Senden Sie den aktuellen Cube-Status an den Server
         socket.emit("update-cube", currentPosition);
       });
-
+*/
       socket.on("update-cube", function(position) {
         // Überprüfe, ob die Socket-ID mit der aktuellen Socket-ID übereinstimmt
         if (position.clientId === clientId) {
@@ -100,13 +127,16 @@
       }
 
       function createPlayer(clientId) {
+        const player_color_1 = "#A2D2F0";
+        const player_color_2 = "#ed3318";
         var newCube = document.createElement("div");
         newCube.id = clientId;
+        newCube.className = "player";
         newCube.style.width = "30px";
         newCube.style.height = "30px";
         newCube.style.left = "50%";
         newCube.style.top = "50%";
-        newCube.style.backgroundColor = "#ed3318";
+        newCube.style.backgroundColor = player_color_2;
         newCube.style.border = "2px solid black";
         newCube.style.boxShadow = "-5px 5px 0px black";
         newCube.style.position = "absolute";
@@ -153,6 +183,39 @@
         clientIdElement.style.top = "10px";
         clientIdElement.style.left = "20px";
         document.body.appendChild(clientIdElement);
+      }
+
+      function checkCollision() {
+        var enemyElement = document.getElementById("enemy");
+        var enemyRect = enemyElement.getBoundingClientRect();
+
+        // Die Positionen und Abmessungen des enemy-Elements abrufen
+        var enemyTop = enemyRect.top;
+        var enemyLeft = enemyRect.left;
+        var enemyRight = enemyRect.right;
+        var enemyBottom = enemyRect.bottom;
+
+        // Andere Elemente überprüfen
+        // Hier kannst du weitere Elemente auswählen und ihre Positionen überprüfen
+
+        // Beispiel: Prüfe, ob enemy mit einem anderen Element mit der ID "obstacle" kollidiert
+        var obstacleElement = document.getElementById("cube");
+        var obstacleRect = obstacleElement.getBoundingClientRect();
+        var obstacleTop = obstacleRect.top;
+        var obstacleLeft = obstacleRect.left;
+        var obstacleRight = obstacleRect.right;
+        var obstacleBottom = obstacleRect.bottom;
+
+        // Kollisionsprüfung durchführen
+        if (
+          enemyBottom >= obstacleTop &&
+          enemyTop <= obstacleBottom &&
+          enemyRight >= obstacleLeft &&
+          enemyLeft <= obstacleRight
+        ) {
+          // Kollision erkannt!
+          console.log("Kollision mit dem Hindernis!");
+        }
       }
 
       function textBox(text) {
@@ -235,12 +298,11 @@
 
       function body() {
         const body = document.body.style;
-        body.backgroundColor = "white";
         body.margin = "0";
         body.padding = "0";
         body.overflow = "hidden";
         body.width = "100%";
-        body.height = "1090px";
+        body.height = "1080px";
       }
 
       function button() {
@@ -268,6 +330,13 @@
 
       function playground(height = 1000, player) {
         const playground = document.createElement("div");
+        document.body.style.margin = "0";
+        document.body.style.padding = "0";
+        document.body.style.overflow = "hidden";
+        document.body.style.width = "100%";
+        document.body.style.height = "1090px";
+        document.body.style.backgroundColor = "white";
+
         playground.id = "playground";
         playground.style.width = "100%";
         playground.style.height = height + "px";
@@ -276,6 +345,28 @@
         document.body.appendChild(playground);
         //playground = document.body.appendChild(clientIdElement);
         return playground;
+      }
+
+      function checkCollision(object) {
+        if (
+          this.x < object.x + object.width &&
+          this.x + this.width > object.x &&
+          this.y < object.y + object.height &&
+          this.y + this.height > object.y
+        ) {
+          console.log("Kollision");
+          // Kollision erkannt
+          return true;
+        }
+        console.log("Keine Kollision");
+        // Keine Kollision
+        return false;
+      }
+
+      function getRandomIntInclusive(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
       }
 
       function divHandler(keyCode, divElement) {

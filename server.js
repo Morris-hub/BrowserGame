@@ -3,8 +3,8 @@ const session = require('express-session');
 const http = require('http');
 const path = require('path');
 const socketIO = require('socket.io');
-const port = 3000;
-const Crypto = require('./server/crypto'); 
+const port = 4000;
+const Crypto = require('./server/crypto');
 
 const app = express();
 const server = http.createServer(app);
@@ -23,12 +23,20 @@ const sessionMiddleware = session({
 const publicPath = path.join(__dirname, "public");
 app.use(sessionMiddleware);
 
-// Route für die Startseitea
+// Route für die Startseite
+app.get('/start', (req, res) => {
+  res.sendFile(__dirname + '/public/startscreen.html');
+
+  let page = req.params.selectedItem;
+  console.log("page" + page);
+  res.redirect('/');
+});
+
 app.get('/', (req, res) => {
-const crypto = new Crypto();
- 
-    // Generieren Sie eine Client-ID, wenn keine vorhanden ist
-  const clientId = req.session.clientId ||  crypto.generateClientId();
+  const crypto = new Crypto();
+
+  // Generieren Sie eine Client-ID, wenn keine vorhanden ist
+  const clientId = req.session.clientId || crypto.generateClientId();
   req.session.clientId = clientId;
   res.sendFile(__dirname + '/public/client.html');
   console.log(__dirname);
@@ -47,7 +55,7 @@ io.on('connection', (socket) => {
 
 //Player input
 // Eventhandler für neue Socket.IO-Verbindungen
-io.on('connection', function(socket) {
+io.on('connection', function (socket) {
   const clientId = socket.request.session.clientId;
   console.log('user ' + clientId + ' connected');
 
@@ -61,7 +69,7 @@ io.on('connection', function(socket) {
   socket.emit("init", cubes);
 
   // Aktualisiere den Cube-Status basierend auf den Eingaben des Clients
-  socket.on("update-cube", function(position) {
+  socket.on("update-cube", function (position) {
     // Füge die Socket-ID zur Position hinzu
     position.clientId = clientId;
 
@@ -79,7 +87,7 @@ io.on('connection', function(socket) {
   });
 });
 
-  
+
 
 // // Funktion zum Generieren einer zufälligen Client-ID
 // function generateClientId() {
